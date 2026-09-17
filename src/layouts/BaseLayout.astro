@@ -1,0 +1,45 @@
+---
+interface Props { title?: string; description?: string }
+const { title = '首页', description = 'XX县国有资产招租信息平台' } = Astro.props;
+const { pathname } = new URL(Astro.url);
+const navItems = [
+  { href: '/', label: '首页' },
+  { href: '/assets', label: '资产列表' },
+  { href: '/about', label: '公司简介' },
+  { href: '/announcements', label: '公告通知' },
+  { href: '/contact', label: '联系方式' },
+];
+function isActive(h: string) { return h === '/' ? pathname === '/' : pathname.startsWith(h); }
+---
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content={description} />
+  <link rel="icon" type="image/x-icon" href="/favicon.ico" />
+  <title>{title} - XX县国有资产招租信息平台</title>
+</head>
+<body>
+  <header class="site-header">
+    <div class="inner">
+      <a class="brand" href="/">XX县国有资产招租信息平台<small>县属国有资产 · 公开招租 · 阳光透明</small></a>
+      <nav class="main-nav">
+        {navItems.map(item => (
+          <a href={item.href} class={isActive(item.href) ? 'active' : ''}>{item.label}</a>
+        ))}
+      </nav>
+    </div>
+  </header>
+  <main>
+    <slot />
+  </main>
+  <footer class="site-footer">
+    <div class="inner">
+      <p><strong>XX县国有资产招租信息平台</strong></p>
+      <p>本平台展示的资产招租信息仅供参考，具体租赁条件、程序及结果以正式公告为准。</p>
+      <p>© {new Date().getFullYear()} XX县国有资产管理中心 · <a href="/admin" target="_blank" rel="noopener">后台管理</a></p>
+    </div>
+  </footer>
+</body>
+</html>

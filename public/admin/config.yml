@@ -1,0 +1,80 @@
+backend:
+  name: github
+  # TODO: 改为你的 GitHub 用户名和仓库名，例如 myname/asset-rental-platform
+  repo: your-github-username/asset-rental-platform
+  branch: main
+  # TODO: 改为你的 Cloudflare Worker OAuth 代理地址，例如 https://myproxy.workers.dev
+  base_url: https://YOUR-DECAP-PROXY.workers.dev
+  auth_endpoint: auth
+
+media_folder: "public/images/uploads"
+public_folder: "/images/uploads"
+
+locale: zh_Hans
+
+collections:
+  # ========== 房屋/商铺/办公楼 ==========
+  - name: "properties"
+    label: "房屋与商铺"
+    label_singular: "房屋/商铺"
+    folder: "src/content/properties"
+    create: true
+    slug: "{{year}}-{{month}}-{{day}}-{{slug}}"
+    fields:
+      - { label: "资产名称", name: "title", widget: "string", required: true }
+      - { label: "类型", name: "type", widget: "select", options: ["房屋", "商铺", "办公楼"], default: "房屋" }
+      - { label: "地址", name: "address", widget: "string", required: true, hint: "填写具体门牌号" }
+      - { label: "建筑面积（㎡）", name: "area", widget: "number", required: true, value_type: "float", min: 0 }
+      - { label: "现状", name: "condition", widget: "select", options: ["空置", "简装", "精装", "毛坯"], default: "空置" }
+      - { label: "图片1（实拍）", name: "image1", widget: "image", hint: "建议尺寸 800×600px，单张 ≤ 500KB" }
+      - { label: "图片2（航拍/全景）", name: "image2", widget: "image" }
+      - { label: "图片3（其他）", name: "image3", widget: "image" }
+      - { label: "联系人姓名", name: "contact_name", widget: "string", required: true }
+      - { label: "座机电话", name: "phone", widget: "string", required: true }
+      - { label: "工作时间", name: "work_hours", widget: "string", default: "周一至周五 9:00-17:00" }
+      - { label: "微信号（文本）", name: "wechat", widget: "string", hint: "仅展示微信号文本，不放二维码" }
+      - { label: "发布时间", name: "date", widget: "datetime" }
+
+  # ========== 土地 ==========
+  - name: "lands"
+    label: "土地"
+    label_singular: "土地"
+    folder: "src/content/lands"
+    create: true
+    slug: "{{year}}-{{month}}-{{day}}-{{slug}}"
+    fields:
+      - { label: "资产名称", name: "title", widget: "string", required: true }
+      - { label: "坐落", name: "location", widget: "string", required: true, hint: "填写具体位置" }
+      - { label: "面积（亩）", name: "area", widget: "number", required: true, value_type: "float", min: 0 }
+      - { label: "图片1", name: "image1", widget: "image", hint: "建议尺寸 800×600px，单张 ≤ 500KB" }
+      - { label: "图片2", name: "image2", widget: "image" }
+      - { label: "图片3", name: "image3", widget: "image" }
+      - { label: "联系人姓名", name: "contact_name", widget: "string", required: true }
+      - { label: "座机电话", name: "phone", widget: "string", required: true }
+      - { label: "工作时间", name: "work_hours", widget: "string", default: "周一至周五 9:00-17:00" }
+      - { label: "微信号（文本）", name: "wechat", widget: "string" }
+      - { label: "发布时间", name: "date", widget: "datetime" }
+
+  # ========== 公告 ==========
+  - name: "announcements"
+    label: "公告通知"
+    label_singular: "公告"
+    folder: "src/content/announcements"
+    create: true
+    slug: "{{year}}-{{month}}-{{day}}-{{slug}}"
+    fields:
+      - { label: "标题", name: "title", widget: "string", required: true }
+      - { label: "日期", name: "date", widget: "datetime", default: "{{now}}" }
+      - { label: "置顶", name: "pinned", widget: "boolean", default: false }
+      - { label: "正文", name: "body", widget: "markdown" }
+
+  # ========== 公司简介（单文件） ==========
+  - name: "company"
+    label: "公司简介"
+    files:
+      - label: "公司简介内容"
+        name: "profile"
+        file: "src/content/company/profile.md"
+        fields:
+          - { label: "标题", name: "title", widget: "string", default: "XX县国有资产经营管理中心" }
+          - { label: "正文", name: "body", widget: "markdown" }

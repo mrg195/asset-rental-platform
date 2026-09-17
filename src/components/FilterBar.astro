@@ -1,0 +1,37 @@
+---
+// 资产筛选栏（列表页使用）
+---
+<div class="filter-bar">
+  <div class="filter-group">
+    <label for="typeFilter">类型</label>
+    <select id="typeFilter">
+      <option value="all">全部</option>
+      <option value="房屋">房屋</option>
+      <option value="商铺">商铺</option>
+      <option value="办公楼">办公楼</option>
+      <option value="土地">土地</option>
+    </select>
+  </div>
+  <div class="filter-group">
+    <label for="propertyAreaFilter">房屋/商铺面积</label>
+    <select id="propertyAreaFilter">
+      <option value="all">全部</option>
+      <option value="0-100">0-100㎡</option>
+      <option value="100-300">100-300㎡</option>
+      <option value="300-500">300-500㎡</option>
+      <option value="500-">500㎡以上</option>
+    </select>
+  </div>
+  <div class="filter-group">
+    <label for="landAreaFilter">土地面积</label>
+    <select id="landAreaFilter">
+      <option value="all">全部</option>
+      <option value="0-10">0-10亩</option>
+      <option value="10-50">10-50亩</option>
+      <option value="50-100">50-100亩</option>
+      <option value="100-">100亩以上</option>
+    </select>
+  </div>
+  <button class="reset-btn" id="resetFilter" type="button">重置</button>
+  <span class="result-count" id="resultCount"></span>
+</div>

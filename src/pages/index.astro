@@ -1,0 +1,93 @@
+---
+import { getCollection } from 'astro:content';
+import BaseLayout from '../layouts/BaseLayout.astro';
+import AssetCard from '../components/AssetCard.astro';
+import AssetDetail from '../components/AssetDetail.astro';
+import AnnouncementList from '../components/AnnouncementList.astro';
+
+const properties = await getCollection('properties');
+const lands = await getCollection('lands');
+
+const allAssets = [
+  ...properties.map(p => ({ ...p.data, id: p.id, category: 'property' as const })),
+  ...lands.map(l => ({ ...l.data, id: l.id, category: 'land' as const })),
+].sort((a, b) => b.date.getTime() - a.date.getTime());
+
+const recentAssets = allAssets.slice(0, 12);
+
+const announcements = (await getCollection('announcements'))
+  .sort((a, b) => b.data.date.getTime() - a.data.date.getTime());
+const latestAnnouncements = announcements.slice(0, 3);
+---
+<BaseLayout title="首页">
+  <section class="page-hero index-hero">
+    <div class="hero-inner">
+      <h1>公开招租 · 阳光透明</h1>
+      <p>XX县行政事业单位及国有企事业单位资产招租信息一站式查询</p>
+      <div class="search-bar">
+        <input type="text" id="searchInput" placeholder="输入关键词搜索资产（名称 / 地址）..." />
+      </div>
+      <div class="filter-buttons" id="filterButtons">
+        <button data-type="all" class="active">全部</button>
+        <button data-type="房屋">房屋</button>
+        <button data-type="商铺">商铺</button>
+        <button data-type="办公楼">办公楼</button>
+        <button data-type="土地">土地</button>
+      </div>
+    </div>
+  </section>
+
+  <div class="container">
+    <div class="section-head">
+      <h2>最新招租资产</h2>
+      <a href="/assets" class="more-link">查看全部 {allAssets.length} 项 →</a>
+    </div>
+    <div class="asset-grid" id="assetGrid">
+      {recentAssets.map(asset => <AssetCard asset={asset} />)}
+    </div>
+    <p class="empty-tip" id="emptyTip" style="display:none">没有符合条件的资产，请调整关键词或类型。</p>
+    <div id="detailArea">
+      {recentAssets.map(asset => <AssetDetail asset={asset} />)}
+    </div>
+
+    <div class="section-head">
+      <h2>公告简讯</h2>
+      <a href="/announcements" class="more-link">更多公告 →</a>
+    </div>
+    <AnnouncementList items={latestAnnouncements} />
+  </div>
+</BaseLayout>
+
+<script>
+  const searchInput = document.getElementById('searchInput');
+  const filterButtons = document.getElementById('filterButtons');
+  const assetGrid = document.getElementById('assetGrid');
+  const emptyTip = document.getElementById('emptyTip');
+  let currentType = 'all';
+
+  function filterAssets() {
+    const keyword = searchInput.value.trim().toLowerCase();
+    const cards = assetGrid.querySelectorAll('.asset-card');
+    let visible = 0;
+    cards.forEach(card => {
+      const title = (card.dataset.title || '').toLowerCase();
+      const address = (card.dataset.address || '').toLowerCase();
+      const type = card.dataset.type;
+      const matchKeyword = !keyword || title.includes(keyword) || address.includes(keyword);
+      const matchType = currentType === 'all' || type === currentType;
+      const ok = matchKeyword && matchType;
+      card.style.display = ok ? '' : 'none';
+      if (ok) visible += 1;
+    });
+    emptyTip.style.display = visible ? 'none' : 'block';
+  }
+
+  searchInput.addEventListener('input', filterAssets);
+  filterButtons.addEventListener('click', e => {
+    if (e.target.tagName !== 'BUTTON') return;
+    filterButtons.querySelectorAll('button').forEach(b => b.classList.remove('active'));
+    e.target.classList.add('active');
+    currentType = e.target.dataset.type;
+    filterAssets();
+  });
+</script>

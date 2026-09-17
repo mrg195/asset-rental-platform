@@ -1,0 +1,21 @@
+---
+import { getCollection, render } from 'astro:content';
+import BaseLayout from '../layouts/BaseLayout.astro';
+import ContactSection from '../components/ContactSection.astro';
+
+const [profile] = await getCollection('company');
+const contentResult = profile ? await render(profile) : null;
+const Content = contentResult?.Content;
+---
+<BaseLayout title="公司简介">
+  <section class="page-hero">
+    <div class="hero-inner">
+      <h1>公司简介</h1>
+    </div>
+  </section>
+  <div class="container prose">
+    {profile?.data.title && <h2>{profile.data.title}</h2>}
+    {Content && <Content />}
+  </div>
+  <div class="container"><ContactSection /></div>
+</BaseLayout>

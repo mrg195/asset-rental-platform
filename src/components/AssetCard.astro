@@ -1,0 +1,41 @@
+---
+interface Props {
+  asset: {
+    id: string;
+    title: string;
+    type?: string;
+    address?: string;
+    location?: string;
+    area: number;
+    condition?: string;
+    image1?: string;
+    category: 'property' | 'land';
+    date: Date;
+  };
+}
+const { asset } = Astro.props;
+const address = asset.address || asset.location || '';
+const unit = asset.category === 'property' ? '㎡' : '亩';
+const typeLabel = asset.category === 'land' ? '土地' : asset.type;
+---
+<article class="asset-card" data-id={asset.id} data-title={asset.title} data-address={address}
+  data-type={typeLabel} data-area={asset.area} data-area-unit={asset.category === 'property' ? 'sqm' : 'mu'}>
+  <button class="card-thumb" type="button" aria-label={`查看 ${asset.title} 详情`}>
+    {asset.image1 ? <img src={asset.image1} alt={asset.title} loading="lazy" /> : (
+      <span class="thumb-placeholder">{typeLabel}<small>示例图位</small></span>
+    )}
+    <span class="type-tag">{typeLabel}</span>
+  </button>
+  <div class="card-body">
+    <h3 class="card-title" title={asset.title}>{asset.title}</h3>
+    <p class="card-address">📍 {address}</p>
+    <p class="card-meta">
+      <span>{asset.area}{unit}</span>
+      {asset.condition && <span class="condition">{asset.condition}</span>}
+    </p>
+    <div class="card-actions">
+      <span class="card-date">{new Date(asset.date).toLocaleDateString('zh-CN')}</span>
+      <span class="detail-toggle">查看详情 →</span>
+    </div>
+  </div>
+</article>

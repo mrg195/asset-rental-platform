@@ -1,0 +1,19 @@
+---
+import { getCollection } from 'astro:content';
+import BaseLayout from '../layouts/BaseLayout.astro';
+import AnnouncementList from '../components/AnnouncementList.astro';
+
+const announcements = (await getCollection('announcements'))
+  .sort((a, b) => (b.data.pinned ? 1 : 0) - (a.data.pinned ? 1 : 0) || b.data.date.getTime() - a.data.date.getTime());
+---
+<BaseLayout title="公告通知">
+  <section class="page-hero">
+    <div class="hero-inner">
+      <h1>公告通知</h1>
+      <p>政策发布 · 招租信息 · 通知公告</p>
+    </div>
+  </section>
+  <div class="container">
+    <AnnouncementList items={announcements} showBody />
+  </div>
+</BaseLayout>

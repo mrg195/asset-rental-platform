@@ -1,0 +1,42 @@
+---
+const { asset } = Astro.props;
+const unit = asset.category === 'property' ? '㎡' : '亩';
+const typeLabel = asset.category === 'land' ? '土地' : asset.type;
+const address = asset.address || asset.location || '—';
+const images = [asset.image1, asset.image2, asset.image3].filter((v): v is string => !!v);
+---
+<div class="asset-detail" id={`detail-${asset.id}`} style="display:none;">
+  <button class="close-btn" type="button" aria-label="关闭详情">×</button>
+
+  {images.length > 0 && (
+    <div class="image-row">
+      {images.map((src, i) => <img src={src} alt={`${asset.title} 图片${i + 1}`} loading="lazy" />)}
+    </div>
+  )}
+
+  <div class="detail-info">
+    <h2>{asset.title}</h2>
+    <table>
+      <tr><td>类型</td><td>{typeLabel}</td></tr>
+      <tr><td>{asset.category === 'property' ? '地址' : '坐落'}</td><td>{address}</td></tr>
+      <tr><td>面积</td><td>{asset.area}{unit}</td></tr>
+      {asset.condition && <tr><td>现状</td><td>{asset.condition}</td></tr>}
+      <tr><td>租金</td><td>详询</td></tr>
+    </table>
+  </div>
+
+  <div class="contact-box">
+    <h3>联系方式</h3>
+    <p>联系人：{asset.contact_name}</p>
+    <p>座机电话：<a href={`tel:${asset.phone}`}>{asset.phone}</a></p>
+    <p>工作时间：{asset.work_hours || '周一至周五 9:00-17:00'}</p>
+    {asset.wechat && <p>微信号：{asset.wechat}</p>}
+  </div>
+
+  <div class="action-buttons">
+    <button type="button" data-action="poster">生成海报</button>
+    <button type="button" data-action="print" class="ghost">打印</button>
+    <button type="button" data-action="share" class="ghost">分享</button>
+    <button type="button" data-action="favorite" data-asset-id={asset.id} class="ghost">☆ 收藏</button>
+  </div>
+</div>

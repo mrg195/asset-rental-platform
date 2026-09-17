@@ -1,0 +1,7 @@
+name: asset-rental-platform-worker
+type: javascript
+compatibility_date: "2024-01-01"
+
+[vars]
+GITHUB_OAUTH_ID = ""
+GITHUB_OAUTH_SECRET = ""

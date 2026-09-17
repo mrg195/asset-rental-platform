@@ -1,0 +1,21 @@
+---
+import { render } from 'astro:content';
+interface Props { items: any[]; showBody?: boolean; limit?: number }
+const { items, showBody = false, limit } = Astro.props;
+const list = items.slice(0, limit ?? items.length);
+---
+<ul class="announcement-list">
+  {list.map(async (entry) => {
+    const { Content } = await render(entry);
+    return (
+      <li class={entry.data.pinned ? 'pinned' : ''} id={`ann-${entry.id}`}>
+        <div class="ann-head">
+          <h3><a href={`/announcements/#ann-${entry.id}`}>{entry.data.title}</a></h3>
+          {entry.data.pinned && <span class="pin-tag">置顶</span>}
+          <time>{new Date(entry.data.date).toLocaleDateString('zh-CN')}</time>
+        </div>
+        {showBody && <div class="ann-body"><Content /></div>}
+      </li>
+    );
+  })}
+</ul>

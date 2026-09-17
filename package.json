@@ -1,0 +1,20 @@
+{
+  "name": "asset-rental-platform",
+  "type": "module",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "astro dev",
+    "build": "astro build",
+    "preview": "astro preview",
+    "gen-sample": "node scripts/generate-sample-data.mjs",
+    "make-favicon": "node scripts/make-favicon.mjs"
+  },
+  "dependencies": {
+    "astro": "^5.7.0",
+    "html2canvas": "^1.4.1"
+  },
+  "devDependencies": {
+    "typescript": "^5.5.0"
+  }
+}

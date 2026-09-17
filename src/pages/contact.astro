@@ -1,0 +1,22 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import ContactSection from '../components/ContactSection.astro';
+---
+<BaseLayout title="联系方式">
+  <section class="page-hero">
+    <div class="hero-inner">
+      <h1>联系方式</h1>
+      <p>业务咨询 · 看房预约 · 监督反馈</p>
+    </div>
+  </section>
+  <div class="container">
+    <ContactSection />
+    <div class="contact-section">
+      <h2>看房须知</h2>
+      <p>1. 看房时间：周一至周五 9:00—17:00（法定节假日除外）；</p>
+      <p>2. 看房前请提前 1 天电话预约，并提供单位名称或个人姓名；</p>
+      <p>3. 看房时请遵守现场管理要求，爱护资产现状；</p>
+      <p>4. 未预约的看房请求将视现场情况安排。</p>
+    </div>
+  </div>
+</BaseLayout>

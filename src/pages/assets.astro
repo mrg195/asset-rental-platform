@@ -1,0 +1,93 @@
+---
+import { getCollection } from 'astro:content';
+import BaseLayout from '../layouts/BaseLayout.astro';
+import AssetCard from '../components/AssetCard.astro';
+import AssetDetail from '../components/AssetDetail.astro';
+import FilterBar from '../components/FilterBar.astro';
+import SortControls from '../components/SortControls.astro';
+
+const properties = await getCollection('properties');
+const lands = await getCollection('lands');
+
+const allAssets = [
+  ...properties.map(p => ({ ...p.data, id: p.id, category: 'property' as const })),
+  ...lands.map(l => ({ ...l.data, id: l.id, category: 'land' as const })),
+].sort((a, b) => b.date.getTime() - a.date.getTime());
+---
+<BaseLayout title="资产列表">
+  <section class="page-hero">
+    <div class="hero-inner">
+      <h1>资产招租列表</h1>
+      <p>共 {allAssets.length} 项资产 · 支持关键词、类型、面积筛选与排序</p>
+    </div>
+  </section>
+
+  <div class="container">
+    <FilterBar />
+    <SortControls />
+    <div class="asset-grid" id="assetGrid">
+      {allAssets.map(asset => <AssetCard asset={asset} />)}
+    </div>
+    <p class="empty-tip" id="emptyTip" style="display:none">没有符合条件的资产，请调整筛选条件。</p>
+    <div id="detailArea">
+      {allAssets.map(asset => <AssetDetail asset={asset} />)}
+    </div>
+  </div>
+</BaseLayout>
+
+<script type="module">
+  const grid = document.getElementById('assetGrid');
+  const emptyTip = document.getElementById('emptyTip');
+  const countEl = document.getElementById('resultCount');
+  const typeFilter = document.getElementById('typeFilter');
+  const propertyAreaFilter = document.getElementById('propertyAreaFilter');
+  const landAreaFilter = document.getElementById('landAreaFilter');
+  const sortSelect = document.getElementById('sortSelect');
+  const resetBtn = document.getElementById('resetFilter');
+
+  function getCards() { return Array.from(grid.querySelectorAll('.asset-card')); }
+
+  function areaMatch(card) {
+    const area = parseFloat(card.dataset.area);
+    const sel = card.dataset.areaUnit === 'mu' ? landAreaFilter : propertyAreaFilter;
+    const v = sel.value;
+    if (v === 'all') return true;
+    if (v.endsWith('-')) return area >= parseFloat(v.slice(0, -1));
+    const [min, max] = v.split('-').map(Number);
+    return area >= min && area <= max;
+  }
+
+  function applyFilters() {
+    const type = typeFilter.value;
+    let visible = 0;
+    getCards().forEach(card => {
+      const matchType = type === 'all' || card.dataset.type === type;
+      const ok = matchType && areaMatch(card);
+      card.style.display = ok ? '' : 'none';
+      if (ok) visible += 1;
+    });
+    countEl.textContent = `共 ${getCards().length} 项，当前显示 ${visible} 项`;
+    emptyTip.style.display = visible ? 'none' : 'block';
+  }
+
+  function sortAssets(sortBy) {
+    let cards = getCards();
+    if (sortBy === 'area-asc') cards = cards.sort((a, b) => parseFloat(a.dataset.area) - parseFloat(b.dataset.area));
+    else if (sortBy === 'area-desc') cards = cards.sort((a, b) => parseFloat(b.dataset.area) - parseFloat(a.dataset.area));
+    else if (sortBy === 'name') cards = cards.sort((a, b) => a.dataset.title.localeCompare(b.dataset.title, 'zh'));
+    cards.forEach(card => grid.appendChild(card));
+  }
+
+  typeFilter.addEventListener('change', applyFilters);
+  propertyAreaFilter.addEventListener('change', applyFilters);
+  landAreaFilter.addEventListener('change', applyFilters);
+  sortSelect.addEventListener('change', () => sortAssets(sortSelect.value));
+  resetBtn.addEventListener('click', () => {
+    typeFilter.value = 'all';
+    propertyAreaFilter.value = 'all';
+    landAreaFilter.value = 'all';
+    sortSelect.value = 'date-desc';
+    applyFilters();
+  });
+  applyFilters();
+</script>
