@@ -2,6 +2,7 @@ backend:
   name: github
   repo: mrg195/asset-rental-platform
   branch: main
+  auth_type: popup
 
 media_folder: "public/images/uploads"
 public_folder: "/images/uploads"
