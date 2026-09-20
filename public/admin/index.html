@@ -4,8 +4,22 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>后台管理 · XX县国有资产招租信息平台</title>
-  <!-- 使用 unpkg 作为主CDN（国内访问正常，不会被 Tracking Prevention 拦截） -->
-  <script src="https://unpkg.com/decap-cms@^3.3.0/dist/decap-cms.js"></script>
+  <!-- Decap CMS：优先本地文件，回退到 CDN -->
+  <script src="/admin/decap-cms.js"></script>
+  <script>
+    // 如果本地文件不存在，尝试从 unpkg 动态加载
+    if (typeof window.CMS === 'undefined') {
+      var cmsScript = document.createElement('script');
+      cmsScript.src = 'https://unpkg.com/decap-cms@3.3.2/dist/decap-cms.js';
+      cmsScript.onload = function() { console.log('[CMS] 从 unpkg 加载成功'); };
+      cmsScript.onerror = function() {
+        console.error('[CMS] 所有加载方式均失败');
+        document.getElementById('loading').style.display = 'none';
+        document.getElementById('error').style.display = 'block';
+      };
+      document.head.appendChild(cmsScript);
+    }
+  </script>
   <style>
     * { box-sizing: border-box; }
     body { margin: 0; background: #f5f7fa; font-family: -apple-system, BlinkMacSystemFont, 'PingFang SC', 'Microsoft YaHei', sans-serif; }
@@ -19,56 +33,75 @@
   </style>
 </head>
 <body>
-  <!-- root 必须在 CMS 脚本加载前存在，确保 appendChild 不为 null -->
+  <!-- #root 必须在 CMS 脚本加载前存在 -->
   <div id="root"></div>
   <div class="loading" id="loading">
     <div class="spinner"></div>
     <div>正在加载后台编辑器...</div>
+    <div style="font-size:12px;color:#999;margin-top:8px;" id="statusText">检查本地文件...</div>
   </div>
   <div class="error" id="error">
     <h2>加载失败</h2>
-    <p>请按 <strong>F12</strong> 查看 Console 和 Network 错误。</p>
-    <p>常见原因：<br/>① 网络问题导致 CDN 资源未加载<br/>② config.yml 配置有误<br/>③ GitHub OAuth 未授权</p>
+    <p>请按 <strong>F12</strong> 查看 Console 和 Network 标签页。</p>
+    <p>当前可能的问题：<br/>
+       ① 浏览器安全策略阻止了外部脚本（Tracking Prevention）<br/>
+       ② 需要将 decap-cms.js 放到 <code>public/admin/</code> 目录<br/>
+       ③ 网络问题导致 CDN 资源无法加载</p>
+    <p style="margin-top:12px;font-size:13px;color:#888;">
+      解决方案：从 https://unpkg.com/decap-cms@3.3.2/dist/decap-cms.js 下载 JS 文件<br/>
+      保存到项目的 <code>public/admin/decap-cms.js</code> 然后重新推送
+    </p>
     <p style="margin-top:16px;"><a href="/">← 返回首页</a></p>
   </div>
   <script>
     (function() {
       var loading = document.getElementById('loading');
       var errorDiv = document.getElementById('error');
+      var statusText = document.getElementById('statusText');
       var root = document.getElementById('root');
-
-      // 安全检测：若 root 不存在则阻止 CMS 尝试挂载
-      if (!root) {
-        loading.style.display = 'none';
-        errorDiv.style.display = 'block';
-        errorDiv.querySelector('p').textContent = '错误：#root 容器未找到。请刷新页面重试。';
-        return;
-      }
-
       var loaded = false;
 
       function showError(msg) {
-        loading.style.display = 'none';
-        errorDiv.style.display = 'block';
-        if (msg) errorDiv.querySelector('h2').textContent = msg;
+        console.error('[CMS Init Error]', msg);
+        if (loading) loading.style.display = 'none';
+        if (errorDiv) {
+          errorDiv.style.display = 'block';
+          if (msg) errorDiv.querySelector('h2').textContent = msg;
+        }
       }
 
-      // 每2秒检查一次 CMS 是否已渲染到 #root
-      var checkInterval = setInterval(function() {
-        if (root && root.children.length > 0) {
-          loaded = true;
-          clearInterval(checkInterval);
-          loading.style.display = 'none';
-        }
-      }, 2000);
+      if (!root) {
+        showError('致命错误：#root 容器未找到');
+        return;
+      }
 
-      // 8秒超时兜底
+      // 轮询检查 CMS 是否已渲染
+      var checkTimer = setInterval(function() {
+        if (window.CMS) {
+          if (root && root.children.length > 0) {
+            loaded = true;
+            clearInterval(checkTimer);
+            if (loading) loading.style.display = 'none';
+            console.log('[CMS] 初始化成功');
+          }
+        }
+      }, 1000);
+
+      // 10秒超时兜底
       setTimeout(function() {
         if (!loaded) {
-          clearInterval(checkInterval);
-          showError('CMS 加载超时，请检查控制台错误后刷新页面');
+          clearInterval(checkTimer);
+          if (statusText) statusText.textContent = '加载超时，请检查控制台...';
+          if (!window.CMS) {
+            showError('CMS 脚本未加载，请查看 F12 Console');
+          }
         }
-      }, 8000);
+      }, 10000);
+
+      // 捕获全局错误
+      window.addEventListener('error', function(e) {
+        console.error('[Global Error]', e.message, e.filename, e.lineno);
+      });
     })();
   </script>
 </body>
