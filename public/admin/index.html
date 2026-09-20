@@ -6,27 +6,38 @@
   <title>后台管理 · XX县国有资产招租信息平台</title>
   <script src="https://cdn.jsdelivr.net/npm/decap-cms@^3.3.0/dist/decap-cms.js"></script>
   <style>
-    body { margin: 0; background: #1a3a6b; display: flex; align-items: center; justify-content: center; min-height: 100vh; color: #fff; font-family: -apple-system, BlinkMacSystemFont, 'PingFang SC', 'Microsoft YaHei', sans-serif; }
-    .fallback { text-align: center; padding: 40px; }
-    .fallback h1 { margin: 0 0 12px; font-size: 22px; letter-spacing: 1px; }
-    .fallback p { margin: 0; opacity: 0.8; font-size: 14px; }
+    body { margin: 0; background: #f5f7fa; font-family: -apple-system, BlinkMacSystemFont, 'PingFang SC', 'Microsoft YaHei', sans-serif; }
+    .loading { display: flex; align-items: center; justify-content: center; height: 100vh; color: #666; font-size: 14px; }
+    .error { display: none; padding: 40px; text-align: center; color: #c00; font-size: 14px; }
   </style>
 </head>
 <body>
-  <noscript>
-    <div class="fallback">
-      <h1>请启用 JavaScript 以加载后台编辑器</h1>
-      <p>Decap CMS 需要 JavaScript 运行环境。</p>
-    </div>
-  </noscript>
+  <div class="loading" id="loading">正在加载后台，请稍候...</div>
+  <div class="error" id="error">
+    <h2>加载失败</h2>
+    <p>请按 F12 打开浏览器控制台，查看 Console 和 Network 标签页的错误信息。</p>
+    <p>常见原因：<br/>① config.yml 未正确加载（检查路径）<br/>② 网络问题导致 CDN 资源未加载<br/>③ OAuth 授权配置有误</p>
+    <p style="margin-top:20px;"><a href="/" target="_blank">返回首页</a></p>
+  </div>
+  <!-- Decap CMS 会挂载到 #root -->
+  <div id="root"></div>
   <script>
-    // Decap CMS 会自动加载同目录下的 config.yml
-    // 若遇到空白页，请检查浏览器控制台（F12）的错误信息。
-    window.addEventListener('load', () => {
-      const cmsContainer = document.querySelector('.cms-root, #cms-root');
-      if (cmsContainer && !cmsContainer.children.length) {
-        document.body.innerHTML = '<div class="fallback"><h1>CMS 未正确初始化</h1><p>请检查 network 面板与 console 错误，确保 config.yml 配置正确。</p></div>';
+    // 监控 CMS 加载状态
+    var loading = document.getElementById('loading');
+    var errorDiv = document.getElementById('error');
+    var root = document.getElementById('root');
+
+    // 5秒后若CMS未渲染，提示检查控制台
+    setTimeout(function() {
+      if (root && root.children.length === 0) {
+        loading.style.display = 'none';
+        errorDiv.style.display = 'block';
       }
+    }, 5000);
+
+    // 捕获JS错误
+    window.addEventListener('error', function(e) {
+      console.error('[CMS Error]', e.message, e.filename, e.lineno);
     });
   </script>
 </body>
