@@ -4,38 +4,59 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>后台管理 · XX县国有资产招租信息平台</title>
-  <script src="https://cdn.jsdelivr.net/npm/decap-cms@^3.3.0/dist/decap-cms.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/decap-cms@^3.3.0/dist/decap-cms.js"
+    onerror="this.src='https://unpkg.com/decap-cms@^3.3.0/dist/decap-cms.js'"></script>
   <style>
+    * { box-sizing: border-box; }
     body { margin: 0; background: #f5f7fa; font-family: -apple-system, BlinkMacSystemFont, 'PingFang SC', 'Microsoft YaHei', sans-serif; }
-    .loading { display: flex; align-items: center; justify-content: center; height: 100vh; color: #666; font-size: 14px; }
-    .error { display: none; padding: 40px; text-align: center; color: #c00; font-size: 14px; }
+    .loading { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; color: #666; }
+    .spinner { width: 40px; height: 40px; border: 3px solid #e0e0e0; border-top-color: #1a73e8; border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 16px; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .error { display: none; max-width: 500px; margin: 60px auto; padding: 30px; background: #fff; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,.1); text-align: center; }
+    .error h2 { margin: 0 0 12px; color: #c00; }
+    .error p { margin: 6px 0; font-size: 14px; color: #555; line-height: 1.6; }
+    .error a { color: #1a73e8; }
   </style>
 </head>
 <body>
-  <div class="loading" id="loading">正在加载后台，请稍候...</div>
+  <div class="loading" id="loading">
+    <div class="spinner"></div>
+    <div>正在加载后台编辑器，请稍候...</div>
+    <div style="font-size:12px;color:#999;margin-top:8px;">(若长期卡顿，请检查网络或 F12 查看 Console)</div>
+  </div>
   <div class="error" id="error">
     <h2>加载失败</h2>
-    <p>请按 F12 打开浏览器控制台，查看 Console 和 Network 标签页的错误信息。</p>
-    <p>常见原因：<br/>① config.yml 未正确加载（检查路径）<br/>② 网络问题导致 CDN 资源未加载<br/>③ OAuth 授权配置有误</p>
-    <p style="margin-top:20px;"><a href="/" target="_blank">返回首页</a></p>
+    <p>请按 <strong>F12</strong> 打开浏览器控制台，查看 Console 和 Network 标签页的错误。</p>
+    <p>可能原因：<br/>
+       ① 网络访问 cdn.jsdelivr.net 受限（中国大陆常见）<br/>
+       ② config.yml 路径错误<br/>
+       ③ GitHub OAuth 配置有误</p>
+    <p style="margin-top:16px;"><a href="/">← 返回首页</a></p>
   </div>
-  <!-- Decap CMS 会挂载到 #root -->
   <div id="root"></div>
   <script>
-    // 监控 CMS 加载状态
     var loading = document.getElementById('loading');
     var errorDiv = document.getElementById('error');
     var root = document.getElementById('root');
+    var loaded = false;
 
-    // 5秒后若CMS未渲染，提示检查控制台
+    function showLoadFail() {
+      if (loaded) return;
+      loading.style.display = 'none';
+      errorDiv.style.display = 'block';
+    }
+
+    // 检测 CMS 是否加载成功
     setTimeout(function() {
-      if (root && root.children.length === 0) {
+      if (root && root.children.length > 0) {
+        loaded = true;
         loading.style.display = 'none';
-        errorDiv.style.display = 'block';
+      } else if (!window.CMS) {
+        // CMS 脚本未加载或初始化失败
+        showLoadFail();
       }
-    }, 5000);
+    }, 4000);
 
-    // 捕获JS错误
     window.addEventListener('error', function(e) {
       console.error('[CMS Error]', e.message, e.filename, e.lineno);
     });
