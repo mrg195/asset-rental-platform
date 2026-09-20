@@ -7,6 +7,7 @@ import AnnouncementList from '../components/AnnouncementList.astro';
 
 const properties = await getCollection('properties');
 const lands = await getCollection('lands');
+const base = import.meta.env.BASE_URL;
 
 const allAssets = [
   ...properties.map(p => ({ ...p.data, id: p.id, category: 'property' as const })),
@@ -40,7 +41,7 @@ const latestAnnouncements = announcements.slice(0, 3);
   <div class="container">
     <div class="section-head">
       <h2>最新招租资产</h2>
-      <a href="/assets" class="more-link">查看全部 {allAssets.length} 项 →</a>
+      <a href={`${base}/assets`} class="more-link">查看全部 {allAssets.length} 项 →</a>
     </div>
     <div class="asset-grid" id="assetGrid">
       {recentAssets.map(asset => <AssetCard asset={asset} />)}
@@ -52,7 +53,7 @@ const latestAnnouncements = announcements.slice(0, 3);
 
     <div class="section-head">
       <h2>公告简讯</h2>
-      <a href="/announcements" class="more-link">更多公告 →</a>
+      <a href={`${base}/announcements`} class="more-link">更多公告 →</a>
     </div>
     <AnnouncementList items={latestAnnouncements} />
   </div>

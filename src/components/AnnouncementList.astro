@@ -10,7 +10,7 @@ const list = items.slice(0, limit ?? items.length);
     return (
       <li class={entry.data.pinned ? 'pinned' : ''} id={`ann-${entry.id}`}>
         <div class="ann-head">
-          <h3><a href={`/announcements/#ann-${entry.id}`}>{entry.data.title}</a></h3>
+          <h3><a href={`${import.meta.env.BASE_URL}/announcements/#ann-${entry.id}`}>{entry.data.title}</a></h3>
           {entry.data.pinned && <span class="pin-tag">置顶</span>}
           <time>{new Date(entry.data.date).toLocaleDateString('zh-CN')}</time>
         </div>
