@@ -1,11 +1,7 @@
 backend:
   name: github
-  # TODO: 改为你的 GitHub 用户名和仓库名，例如 myname/asset-rental-platform
-  repo: your-github-username/asset-rental-platform
+  repo: mrg195/asset-rental-platform
   branch: main
-  # TODO: 改为你的 Cloudflare Worker OAuth 代理地址，例如 https://myproxy.workers.dev
-  base_url: https://YOUR-DECAP-PROXY.workers.dev
-  auth_endpoint: auth
 
 media_folder: "public/images/uploads"
 public_folder: "/images/uploads"
