@@ -2,7 +2,7 @@ backend:
   name: github
   repo: mrg195/asset-rental-platform
   branch: main
-  base_url: https://asset-cms-oauth.mrg1955342.workers.dev
+  base_url: https://auth.mrg195.xyz
   auth_endpoint: auth
 
 media_folder: "public/images/uploads"
