@@ -7,7 +7,7 @@
   <script>window.CMS_MANUAL_INIT = true;</script>
   <script src="./decap-cms.js"></script>
   <style>
-    #loading { position: fixed; inset: 0; background: #1a1a2e; color: #eee; display: flex; flex-direction: column; align-items: center; justify-content: center; font-family: system-ui, sans-serif; z-index: 99999; }
+    #loading { position: fixed; inset: 0; background: #1a1a2e; color: #eee; display: flex; flex-direction: column; align-items: center; justify-content: center; font-family: system-ui, sans-serif; z-index: 99999; cursor: pointer; }
     .dots span { display: inline-block; width: 10px; height: 10px; border-radius: 50%; background: #4fc3f7; margin: 0 4px; animation: bounce 1.4s infinite; }
     .dots span:nth-child(2) { animation-delay: .2s; }
     .dots span:nth-child(3) { animation-delay: .4s; }
@@ -16,34 +16,50 @@
 </head>
 <body>
   <div id="root"></div>
+  <div id="nc-root"></div>
   <div id="loading">
     <div class="dots"><span></span><span></span><span></span></div>
-    <p style="margin-top:16px;font-size:14px;opacity:0.7;">加载中...</p>
+    <p style="margin-top:16px;font-size:14px;opacity:0.7;">加载中...（若卡住可点击此区域）</p>
   </div>
   <script>
+    function hideLoading() {
+      var el = document.getElementById('loading');
+      if (el) el.style.display = 'none';
+    }
+    function cmsRendered() {
+      return !!document.querySelector('.cms-root') ||
+             !!document.querySelector('#nc-root > *') ||
+             !!document.querySelector('#root > *');
+    }
     document.addEventListener('DOMContentLoaded', function() {
-      var root = document.getElementById('root');
-      var loading = document.getElementById('loading');
       if (!window.CMS) {
-        loading.innerHTML = '<h2>加载失败</h2><p>请按 F12 → Console 查看错误</p>';
+        document.getElementById('loading').innerHTML = '<h2>加载失败</h2><p>CMS 脚本未加载</p>';
         return;
       }
-      window.CMS.init();
-      // 监听 CMS 界面渲染（无论挂到 #root 还是自建容器），出现即隐藏遮罩
-      var obs = new MutationObserver(function() {
-        if (document.querySelector('.cms-root') || (root && root.children.length > 0)) {
-          loading.style.display = 'none';
-          obs.disconnect();
+      try {
+        // 官方文档：script 标签方式下，手动初始化使用 window.initCMS()
+        if (typeof window.initCMS === 'function') {
+          window.initCMS();
+        } else if (typeof window.CMS.init === 'function') {
+          window.CMS.init();
         }
+      } catch (e) {
+        console.error('[CMS] init 异常:', e);
+      }
+      // 渲染检测：出现 CMS 界面即隐藏遮罩
+      var obs = new MutationObserver(function() {
+        if (cmsRendered()) { hideLoading(); obs.disconnect(); }
       });
       obs.observe(document.body, { childList: true, subtree: true });
-      // 兜底：确实没渲染才提示
+      // 兜底超时
       setTimeout(function() {
-        if (!document.querySelector('.cms-root') && (!root || root.children.length === 0)) {
-          loading.innerHTML = '<h2>加载超时</h2><p>请按 F12 → Console 查看错误</p>';
+        if (!cmsRendered()) {
+          document.getElementById('loading').innerHTML = '<h2>加载超时</h2><p>请按 F12 → Console 查看错误</p>';
         }
-      }, 10000);
+      }, 12000);
     });
+    // 手动点击遮罩可强制查看（防检测失效）
+    document.getElementById('loading').addEventListener('click', hideLoading);
   </script>
 </body>
 </html>
