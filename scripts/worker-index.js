@@ -1,56 +1,84 @@
-const id = process.env.GITHUB_OAUTH_ID;
-const secret = process.env.GITHUB_OAUTH_SECRET;
+// Cloudflare Worker: Decap CMS GitHub OAuth 代理
+// 部署后需要配置两个 secret:
+//   npx wrangler secret put GITHUB_OAUTH_CLIENT_ID
+//   npx wrangler secret put GITHUB_OAUTH_CLIENT_SECRET
+// 访问路径:
+//   /auth     -> Decap 弹窗入口，跳转 GitHub 授权
+//   /callback -> GitHub 回调，换取 token 并 postMessage 回 CMS
 
-async function withError(msg) {
-  return new Response(msg, { status: 400, headers: { "Content-Type": "text/plain; charset=utf-8" } });
-}
+const JSON_HEADERS = { "Content-Type": "application/json; charset=utf-8" };
 
 export default {
-  async fetch(request, env, ctx) {
+  async fetch(request, env) {
     const url = new URL(request.url);
 
-    // CORS preflight
-    if (request.method === "OPTIONS") {
-      return new Response(null, {
-        headers: {
-          "access-control-allow-origin": "*",
-          "access-control-allow-methods": "GET,POST,OPTIONS",
-          "access-control-allow-headers": "Content-Type,Authorization",
-        },
+    // ---------- /auth : 跳转 GitHub 授权 ----------
+    if (url.pathname === "/auth") {
+      const siteId = url.searchParams.get("site_id") || "mrg195.github.io";
+      const scope = url.searchParams.get("scope") || "repo";
+      const params = new URLSearchParams({
+        client_id: env.GITHUB_OAUTH_CLIENT_ID,
+        redirect_uri: `${url.origin}/callback`,
+        scope: scope,
+        state: siteId,
       });
+      return Response.redirect(
+        `https://github.com/login/oauth/authorize?${params.toString()}`,
+        302
+      );
     }
 
-    // OAuth callback — exchange code for token, then redirect back to CMS
+    // ---------- /callback : 换取 token 并回传 CMS ----------
     if (url.pathname === "/callback") {
       const code = url.searchParams.get("code");
-      if (!code) return withError("Missing authorization code");
+      if (!code) {
+        return new Response("缺少 code 参数", { status: 400, headers: JSON_HEADERS });
+      }
 
       const tokenRes = await fetch("https://github.com/login/oauth/access_token", {
         method: "POST",
         headers: { "Content-Type": "application/json", Accept: "application/json" },
-        body: JSON.stringify({ client_id: id, client_secret: secret, code }),
+        body: JSON.stringify({
+          client_id: env.GITHUB_OAUTH_CLIENT_ID,
+          client_secret: env.GITHUB_OAUTH_CLIENT_SECRET,
+          code: code,
+        }),
       });
-      const tokenData = await tokenRes.json();
-      if (tokenData.error) return withError("GitHub auth error: " + tokenData.error_description);
+      const data = await tokenRes.json().catch(() => ({}));
 
-      const redirectUrl = new URL(url.searchParams.get("redirect_uri") || "/");
-      redirectUrl.searchParams.set("github_token", tokenData.access_token);
+      if (!data.access_token) {
+        return new Response(
+          "GitHub 授权失败: " + JSON.stringify(data),
+          { status: 400, headers: JSON_HEADERS }
+        );
+      }
 
-      return Response.redirect(redirectUrl.toString(), 302);
+      // 与 Decap CMS 的弹窗握手：postMessage 给打开弹窗的窗口
+      const cmsOrigin = "https://" + (url.searchParams.get("state") || "mrg195.github.io");
+      const token = data.access_token;
+      const html = `<!DOCTYPE html>
+<html lang="zh-CN">
+<body style="font-family:sans-serif;text-align:center;padding-top:80px;">
+  <p>授权成功，正在返回后台...</p>
+  <script>
+    (function () {
+      var token = ${JSON.stringify(token)};
+      var origin = ${JSON.stringify(cmsOrigin)};
+      if (window.opener) {
+        window.opener.postMessage({ token: token, provider: "github" }, origin);
+      }
+      document.body.innerText = "授权成功，请关闭此窗口返回后台。";
+      setTimeout(function () { window.close(); }, 600);
+    })();
+  <\/script>
+</body>
+</html>`;
+      return new Response(html, {
+        headers: { "Content-Type": "text/html; charset=utf-8" },
+      });
     }
 
-    // Authorization endpoint — redirect to GitHub
-    if (url.pathname === "/auth") {
-      const params = new URLSearchParams({
-        client_id: id,
-        redirect_uri: url.origin + "/callback",
-        scope: "repo",
-        state: url.searchParams.get("state") || "",
-      });
-      return Response.redirect("https://github.com/login/oauth/authorize?" + params.toString(), 302);
-    }
-
-    // Catch-all — pass through to Decap CMS frontend
-    return new Response("OK", { headers: { "Content-Type": "text/plain" } });
+    // ---------- 其他路径 ----------
+    return new Response("Decap OAuth Worker 运行中。", { headers: JSON_HEADERS });
   },
 };
